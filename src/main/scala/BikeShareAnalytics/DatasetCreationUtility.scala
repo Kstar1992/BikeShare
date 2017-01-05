@@ -26,6 +26,6 @@ object DatasetCreationUtility {
   }
 
   def timeConversionToSeconds(duration: String): Long = {
-    duration.split("[^0-9]").toList.filter(_.nonEmpty).reverse.zipWithIndex.map{case (value,index) => value.toInt*(index+1)*60}.sum
+    duration.split("[^0-9]").toList.filter(_.nonEmpty).reverse.zipWithIndex.map{case (value,index) => value.toInt*(index)*60}.sum
   }
 }

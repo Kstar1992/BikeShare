@@ -16,7 +16,7 @@ object DataAnalysis {
     LogManager.getRootLogger.setLevel(Level.WARN)
     val filePath = "src/main/resources/InputData/Bike_Trip_Data.csv"
     val inputDS = DatasetCreationUtility.generateAndCleanDataset(filePath,sparkSession)
-    val ml_bike = MachineLearningModels.dataPreprationForML(sparkSession,inputDS)
+    val ml_bike = MachineLearningModels.dataPreparationForML(sparkSession,inputDS)
     val splits = ml_bike.randomSplit(Array(0.8,0.2),seed = 11L)
     val trainSet = splits(0).rdd.cache()
     val testSet = splits(1).rdd

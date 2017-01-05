@@ -6,12 +6,15 @@ import org.apache.spark.mllib.tree.{DecisionTree, RandomForest}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
+import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
+import org.apache.spark.mllib.util.MLUtils
 /**
   * Created by kunal on 26/12/16.
   */
 object MachineLearningModels {
 
-  def dataPreprationForML(sparkSession:SparkSession,input: Dataset[BikeData]): Dataset[LabeledPoint] = {
+  def dataPreparationForML(sparkSession:SparkSession,input: Dataset[BikeData]): Dataset[LabeledPoint] = {
     import sparkSession.implicits._
     val stationMap = input.map(_.startStation).union(input.map(_.endStation)).distinct.rdd.zipWithUniqueId().collectAsMap()
     val memberTypeMap = Map("Registered" -> 0.0, "Casual" -> 1.0)
@@ -27,7 +30,7 @@ object MachineLearningModels {
     val model = NaiveBayes.train(trainSet)
     val pred = testSet.map(t => (model.predict(t.features), t.label))
     val cm = sparkSession.sparkContext.parallelize(pred.countByValue().toSeq)
-    val cm_nb = cm.map(x => (x._1, 1.0 * x._2 / n)).sortBy(_._1, true)
+    val cm_nb = cm.map(x => (x._1, (1.0*x._2/n))).sortBy(_._1, true)
     cm_nb.foreach(println)
   }
 
@@ -42,7 +45,7 @@ object MachineLearningModels {
     val model = DecisionTree.trainClassifier(trainSet, numClasses, categoricalFearuresInfo, impurity, maxDepth,maxBins)
     val pred = testSet.map(t => (model.predict(t.features), t.label))
     val cm = sparkSession.sparkContext.parallelize(pred.countByValue().toSeq)
-    val cm_nb = cm.map(x => (x._1, 1.0 * x._2 / n)).sortBy(_._1, true)
+    val cm_nb = cm.map(x => (x._1, (1.0*x._2/n))).sortBy(_._1, true)
     cm_nb.foreach(println)
   }
    def randomForest(sparkSession: SparkSession,trainSet: RDD[LabeledPoint],testSet: RDD[LabeledPoint]) = {
@@ -54,11 +57,10 @@ object MachineLearningModels {
      val impurity = "gini"
      val maxDepth = 5
      val maxBins = 32
-
      val model= RandomForest.trainClassifier(trainSet,numClasses,categoricalFearuresInfo,numTrees,featureSubsetStratergy,impurity,maxDepth,maxBins)
      val pred = testSet.map(t => (model.predict(t.features), t.label))
      val cm = sparkSession.sparkContext.parallelize(pred.countByValue().toSeq)
-     val cm_nb = cm.map(x => (x._1, 1.0 * x._2 / n)).sortBy(_._1, true)
+     val cm_nb = cm.map(x => (x._1, (1.0*x._2/n))).sortBy(_._1, true)
      cm_nb.foreach(println)
    }
 }
